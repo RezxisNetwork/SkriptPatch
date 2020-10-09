@@ -33,6 +33,13 @@ public class SkriptPatcher {
 					+ "}"
 					+ "}"
 					+ "}";
+			String body_inject2 = "{"
+					+ "for (int i = 0; i < blacklisted.size(); i++) {"
+					+ "if ($2.getName().equalsIgnoreCase((java.lang.String)blacklisted.get(i))) {"
+					+ "return;"
+					+ "}"
+					+ "}"
+					+ "}";
 			String body_addBlackListed = "{"
 					+ "blacklisted.add($1);"
 					+ "}";
@@ -40,12 +47,16 @@ public class SkriptPatcher {
 					+ "blacklisted.remove($1);"
 					+ "}";
 			
-			CtMethod method_registerCondition = class_skript.getDeclaredMethod("registerCondition");
-			method_registerCondition.insertBefore(body_inject);
-			CtMethod method_registerEffect = class_skript.getDeclaredMethod("registerEffect");
-			method_registerEffect.insertBefore(body_inject);
-			CtMethod method_registerExpression = class_skript.getDeclaredMethod("registerExpression");
-			method_registerExpression.insertBefore(body_inject);
+			String[] methods_target = new String[] {"registerExpression","registerEffect","registerCondition"};
+			
+			for (String name_method : methods_target) {
+				CtMethod method = class_skript.getDeclaredMethod(name_method);
+				method.insertBefore(body_inject);
+			}
+			
+			CtMethod method_registerEvent = class_skript.getDeclaredMethod("registerEvent");
+			method_registerEvent.insertBefore(body_inject2);
+			
 			CtMethod method_addBlacklisted = CtMethod.make("public static void addBlacklisted(java.lang.String arg) "+body_addBlackListed, class_skript);
 			class_skript.addMethod(method_addBlacklisted);
 			CtMethod method_removeBlacklisted = CtMethod.make("public static void removeBlacklisted(java.lang.String arg) "+body_removeBlackListed, class_skript);
